@@ -14,8 +14,17 @@ jobs:
   test:
     docker:
       - image: mozilla/cidockerbases:rust-2019-04-10
+        environment:
+          DOCKER_VER: 18.06.1-ce
     steps:
       - checkout
+      - run:
+          name: Install Docker client
+          command: |
+            set -x
+            curl -L -o /tmp/docker-$DOCKER_VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$DOCKER_VER.tgz
+            tar -xz -C /tmp -f /tmp/docker-$DOCKER_VER.tgz
+            mv /tmp/docker/* /usr/bin
       - run:
           name: Build
           command: cargo build --release
@@ -108,31 +117,3 @@ workflows:
     jobs:
       - test
       - lint
-
-  build-publish:
-    jobs:
-      - test:
-          filters:
-            tags:
-              only: /.*/
-
-      - lint:
-          filters:
-            tags:
-              only: /.*/
-
-      - build:
-          filters:
-            tags:
-              only: /.*/
-
-      - publish:
-          requires:
-            - test
-            - lint
-            - build
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: master
