@@ -18,9 +18,9 @@ jobs:
           DOCKER_VER: 18.06.1-ce
     steps:
       - checkout
-      - run: |
-          sudo apt-get update
-          sudo apt-get install libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc binutils-dev libiberty-dev zlib1g-dev
+      # - run: |
+      #     sudo apt-get update
+      #     sudo apt-get install libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc binutils-dev libiberty-dev zlib1g-dev
       # - setup_remote_docker:
       #     version: 18.06.0-ce
       # - run:
@@ -31,6 +31,12 @@ jobs:
       #       tar -xz -C /tmp -f /tmp/docker-$DOCKER_VER.tgz
       #       mv /tmp/docker/* /usr/bin
       - run:
+          name: kcov setup
+          command: cargo kcov --print-install-kcov-sh | sh
+      - run:
+          name: kcov clean
+          command: cargo clean
+      - run:
           name: Build
           command: cargo build --release
       - run:
@@ -38,7 +44,7 @@ jobs:
           command: cargo test --release
       - run:
           name: Coverage
-          command: cargo kcov --print-install-kcov-sh | sh
+          command: cargo clean && RUSTFLAGS="-C link-dead-code" cargo test --no-run && cargo kcov --no-clean-rebuild
       - codecov/upload:
           file: target/cov/
           flags: flags cargo_kcov
